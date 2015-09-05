@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 
 import os
@@ -15,13 +16,13 @@ def get_version(file_rel_path):
 
 
 setup(
-    name='vk',
-    version=get_version('vk/api.py'),
+    name='vk_async',
+    version=get_version('vk_async/api.py'),
 
-    author='Dmitry Voronin',
-    author_email='dimka665@gmail.com',
+    author='Artur Chakhvadze',
+    author_email='norpadon@yandex.com',
 
-    url='https://github.com/dimka665/vk',
+    url='https://github.com/norpadon/vk_async',
     description='vk.com API Python wrapper',
 
     packages=find_packages(),
@@ -38,5 +39,5 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    keywords='vk.com api vk wrappper',
+    keywords='vk.com async api vk wrappper',
 )

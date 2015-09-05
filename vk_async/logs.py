@@ -1,25 +1,24 @@
-
 import sys
 
 
 LOGGING_CONFIG = {
     'version': 1,
     'loggers': {
-        'vk': {
+        'vk_async': {
             'level': 'INFO',
-            'handlers': ['vk-stdout'],
+            'handlers': ['vk_async-stdout'],
             'propagate': False,
             },
         },
     'handlers': {
-        'vk-stdout': {
+        'vk_async-stdout': {
             'class': 'logging.StreamHandler',
             'stream': sys.stdout,
-            'formatter': 'vk-verbose',
+            'formatter': 'vk_async-verbose',
         },
     },
     'formatters': {
-        'vk-verbose': {
+        'vk_async-verbose': {
             'format': '%(asctime)s %(name) -14s %(levelname)s: %(message)s',
         },
     },

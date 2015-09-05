@@ -54,3 +54,6 @@ docs/_build/
 
 # IDEs
 .idea/
+
+# Testing
+test_props.py

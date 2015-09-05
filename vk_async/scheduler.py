@@ -21,7 +21,6 @@ class Scheduler(object):
         self.last_requests = deque([datetime.min] * max_requests_per_second)
         self.queue = deque()
         self.max_requests_per_second = max_requests_per_second
-        self._kick_scheduler()
 
     def _kick_scheduler(self):
         self.executor = Thread(None, self._init_scheduler)
@@ -39,6 +38,7 @@ class Scheduler(object):
                 future.set_result(task())
             except Exception as e:
                 future.set_exception(e)
+        self.executor = None
 
     def _add_task(self, func):
         future = Future()
@@ -47,7 +47,8 @@ class Scheduler(object):
 
     def __del__(self):
         self.kill()
-        self.executor.join()
+        if self.executor:
+            self.executor.join()
 
     def kill(self):
         self.queue = None
@@ -55,5 +56,6 @@ class Scheduler(object):
     def call(self, *args, **kwargs):
         callback = partial(self.session.post, *args, **kwargs)
         result = self._add_task(callback)
-        self._kick_scheduler()
+        if not self.executor:
+            self._kick_scheduler()
         return result

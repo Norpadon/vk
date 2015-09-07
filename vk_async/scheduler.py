@@ -58,4 +58,6 @@ class Scheduler(object):
         result = self._add_task(callback)
         if not self.executor:
             self._kick_scheduler()
+
         return result
+

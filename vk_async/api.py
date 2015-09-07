@@ -7,6 +7,7 @@ import logging
 import logging.config
 import warnings
 
+from functools import partial
 from concurrent.futures import Future
 from requests import Session
 
@@ -64,10 +65,15 @@ class API(object):
         self.schedulers = [Scheduler() for app_id in self.app_ids]
         self.current_scheduler = 0
 
-    def _post(self, *args, **kwargs):
+    def _post_and_process(self, processor, *args, **kwargs):
+        """Asynchronously ake HTTP POST query and process result."""
         scheduler = self.schedulers[self.current_scheduler]
         self._next_scheduler()
-        return scheduler.call(self.session.post, *args, **kwargs)
+
+        def callback(*args, **kwargs):
+            return processor(self.session.post(*args, **kwargs))
+
+        return scheduler.call(callback, *args, **kwargs)
 
     def _next_scheduler(self):
         self.current_scheduler = (self.current_scheduler + 1) % len(self.schedulers)
@@ -184,10 +190,9 @@ class API(object):
     def __getattr__(self, method_name):
         return APIMethod(self, method_name)
 
-    def _process_response(self, response_future,
-                          method_name, method_kwargs):
+    def _process_response(self, scheduler, method_name,
+                          method_kwargs, response):
 
-        response = response_future.result()
         response.raise_for_status()
         # there are may be 2 dicts in 1 json
         # for example: {'error': ...}{'response': ...}
@@ -210,29 +215,22 @@ class API(object):
 
         if AUTHORIZATION_FAILED in error_codes:  # invalid access token
             logger.info('Authorization failed. Access token will be dropped')
-            self.drop_access_token()
+            self.drop_access_token(scheduler)
             return self(method_name, **method_kwargs)
         else:
             raise VkAPIMethodError(errors[0])
 
     def __call__(self, method_name, **method_kwargs):
         self.check_access_token(self.current_scheduler)
+        processor = partial(self._process_response, self.current_scheduler,
+                            method_name, method_kwargs)
 
-        future = Future()
 
-        def callback(response_future):
-            try:
-                future.set_result(self._process_response(response_future,
-                                                         method_name,
-                                                         method_kwargs))
-            except Exception as e:
-                future.set_exception(e)
+        return self.method_request(method_name, processor, **method_kwargs)
 
-        self.method_request(method_name, **method_kwargs).add_done_callback(callback)
 
-        return future
-
-    def method_request(self, method_name, timeout=None, **method_kwargs):
+    def method_request(self, method_name, processor,
+                       timeout=None, **method_kwargs):
         params = {
             'timestamp': int(time.time()),
             'v': self.api_version,
@@ -246,7 +244,8 @@ class API(object):
 
         logger.info('Make request %s, %s', url, params)
 
-        return self._post(url, params, timeout=timeout or self.default_timeout)
+        return self._post_and_process(processor, url, params,
+                                      timeout=timeout or self.default_timeout)
 
     def captcha_is_needed(self, error_data, method_name, **method_kwargs):
         raise VkAPIMethodError(error_data)

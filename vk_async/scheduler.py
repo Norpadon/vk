@@ -41,11 +41,22 @@ class FutureFunctor(Future):
         future.executor = executor
         return future
 
+    @staticmethod
+    def lift(value, executor=None):
+        result = FutureFunctor(executor)
+        result.set_result(value)
+        return result
+
     def __init__(self, executor):
         self.executor = executor
         Future.__init__(self)
 
     def fmap(self, func):
-        result = self.executor.submit(func, self.result())
+        def callback():
+            return func(self.result())
+        if self.executor:
+            result = self.executor.submit(callback)
+        else:
+            result = callback()
         return FutureFunctor.wrap(result, self.executor)
 

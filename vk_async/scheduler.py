@@ -54,9 +54,10 @@ class FutureFunctor(Future):
     def fmap(self, func):
         def callback():
             return func(self.result())
+
         if self.executor:
             result = self.executor.submit(callback)
+            return FutureFunctor.wrap(result, self.executor)
         else:
-            result = callback()
-        return FutureFunctor.wrap(result, self.executor)
+            return FutureFunctor.lift(callback())
 

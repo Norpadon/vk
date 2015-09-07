@@ -21,6 +21,7 @@ logger = logging.getLogger('vk_async')
 
 VERSION = '0.1'
 
+
 class API(object):
     LOGIN_URL = 'https://m.vk.com'
     REDIRECT_URI = 'https://oauth.vk_.com/blank.html'

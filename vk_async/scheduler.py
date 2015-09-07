@@ -26,10 +26,7 @@ class Scheduler(object):
         return callback()
 
     def __del__(self):
-        self.kill()
-
-    def kill(self):
-        self.queue = None
+        self.executor.shutdown()
 
     def call(self, fn, *args, **kwargs):
         callback = partial(fn, *args, **kwargs)
@@ -38,7 +35,6 @@ class Scheduler(object):
 
 
 class FutureFunctor(Future):
-
     @staticmethod
     def wrap(future, executor):
         future.__class__ = FutureFunctor

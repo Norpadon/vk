@@ -268,3 +268,4 @@ class APIMethod(object):
 
     def __call__(self, **method_kwargs):
         return self._api_session(self._method_name, **method_kwargs)
+

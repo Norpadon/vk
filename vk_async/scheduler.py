@@ -48,3 +48,4 @@ class FutureFunctor(Future):
     def fmap(self, func):
         result = self.executor.submit(func, self.result())
         return FutureFunctor.wrap(result, self.executor)
+

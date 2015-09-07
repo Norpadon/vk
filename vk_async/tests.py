@@ -35,7 +35,10 @@ class VkTestCase(unittest.TestCase):
     def test_get_profiles_via_token(self):
         profiles = self.vk_api.users.get(user_id=1).result()
         self.assertEqual(profiles[0]['last_name'], u'Дуров')
-        del self.vk_api.schedulers[0]
+
+    def test_get_friends(self):
+        friends = self.vk_api.friends.get(user_id=1)
+        self.assertEqual(friends.fmap(lambda fs: len(fs) > 0).result(), True)
 
 if __name__ == '__main__':
     unittest.main()

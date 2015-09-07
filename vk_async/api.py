@@ -65,18 +65,16 @@ class API(object):
         self.schedulers = [Scheduler() for app_id in self.app_ids]
         self.current_scheduler = 0
 
-    def _post_and_process(self, processor, *args, **kwargs):
+    def _post(self,  *args, **kwargs):
         """Asynchronously ake HTTP POST query and process result."""
         scheduler = self.schedulers[self.current_scheduler]
         self._next_scheduler()
 
-        def callback(*args, **kwargs):
-            return processor(self.session.post(*args, **kwargs))
-
-        return scheduler.call(callback, *args, **kwargs)
+        return scheduler.call(self.session.post, *args, **kwargs)
 
     def _next_scheduler(self):
-        self.current_scheduler = (self.current_scheduler + 1) % len(self.schedulers)
+        n = len(self.schedulers)
+        self.current_scheduler = (self.current_scheduler + 1) % n
 
     def drop_access_token(self, index):
         logger.info('Access token was dropped')
@@ -225,12 +223,10 @@ class API(object):
         processor = partial(self._process_response, self.current_scheduler,
                             method_name, method_kwargs)
 
+        return self.method_request(method_name, **method_kwargs).fmap(processor)
 
-        return self.method_request(method_name, processor, **method_kwargs)
 
-
-    def method_request(self, method_name, processor,
-                       timeout=None, **method_kwargs):
+    def method_request(self, method_name, timeout=None, **method_kwargs):
         params = {
             'timestamp': int(time.time()),
             'v': self.api_version,
@@ -244,8 +240,7 @@ class API(object):
 
         logger.info('Make request %s, %s', url, params)
 
-        return self._post_and_process(processor, url, params,
-                                      timeout=timeout or self.default_timeout)
+        return self._post(url, params, timeout=timeout or self.default_timeout)
 
     def captcha_is_needed(self, error_data, method_name, **method_kwargs):
         raise VkAPIMethodError(error_data)

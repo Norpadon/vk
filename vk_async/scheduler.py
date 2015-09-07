@@ -33,4 +33,22 @@ class Scheduler(object):
 
     def call(self, fn, *args, **kwargs):
         callback = partial(fn, *args, **kwargs)
-        return self.executor.submit(self._wait_and_execute, callback)
+        result = self.executor.submit(self._wait_and_execute, callback)
+        return FutureFunctor.wrap(result, self.executor)
+
+
+class FutureFunctor(Future):
+
+    @staticmethod
+    def wrap(future, executor):
+        future.__class__ = FutureFunctor
+        future.executor = executor
+        return future
+
+    def __init__(self, executor):
+        self.executor = executor
+        Future.__init__(self)
+
+    def fmap(self, func):
+        result = self.executor.submit(func, self.result())
+        return FutureFunctor.wrap(result, self.executor)

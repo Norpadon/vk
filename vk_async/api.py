@@ -45,6 +45,10 @@ class API(object):
                      'user_login=%(user_login)r, '
                      'user_password=%(user_password)r', log_args)
 
+        self.session = Session()
+        self.session.headers['Accept'] = 'application/json'
+        self.session.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+
         self.app_ids = app_ids if app_ids else []
         self.user_login = user_login
         self.user_password = user_password
@@ -59,6 +63,11 @@ class API(object):
 
         self.schedulers = [Scheduler() for app_id in self.app_ids]
         self.current_scheduler = 0
+
+    def _post(self, *args, **kwargs):
+        scheduler = self.schedulers[self.current_scheduler]
+        self._next_scheduler()
+        return scheduler.call(self.session.post, *args, **kwargs)
 
     def _next_scheduler(self):
         self.current_scheduler = (self.current_scheduler + 1) % len(self.schedulers)
@@ -236,37 +245,19 @@ class API(object):
         url = 'https://api.vk.com/method/' + method_name
 
         logger.info('Make request %s, %s', url, params)
-        scheduler = self.schedulers[self.current_scheduler]
-        response = scheduler.call(url, params, timeout=timeout or self.default_timeout)
-        self._next_scheduler()
-        return response
+
+        return self._post(url, params, timeout=timeout or self.default_timeout)
 
     def captcha_is_needed(self, error_data, method_name, **method_kwargs):
-        """
-        Default behavior on CAPTCHA is to raise exception
-        Reload this in child
-        """
         raise VkAPIMethodError(error_data)
     
     def auth_code_is_needed(self, content, session):
-        """
-        Default behavior on 2-AUTH CODE is to raise exception
-        Reload this in child
-        """           
         raise VkAuthorizationError('Authorization error (2-factor code is needed)')
     
     def auth_captcha_is_needed(self, content, session):
-        """
-        Default behavior on CAPTCHA is to raise exception
-        Reload this in child
-        """
         raise VkAuthorizationError('Authorization error (captcha)')
     
     def phone_number_is_needed(self, content, session):
-        """
-        Default behavior on PHONE NUMBER is to raise exception
-        Reload this in child
-        """
         raise VkAuthorizationError('Authorization error (phone number is needed)')
     
 

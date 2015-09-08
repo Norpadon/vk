@@ -71,7 +71,7 @@ class API(object):
     def _post(self,  *args, **kwargs):
         while True:
             try:
-                return self.scheduler.call(self.session.post, *args, **kwargs)
+                return self.session.post(*args, **kwargs)
             except (ConnectionError, Timeout) as error:
                 logger.warning(error)
 

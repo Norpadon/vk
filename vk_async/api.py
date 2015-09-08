@@ -67,10 +67,11 @@ class API(object):
         self.schedulers = [Scheduler() for app_id in self.app_ids]
         self.current_scheduler = 0
 
-    def _post(self, *args, **kwargs):
+
+    def _post(self,  *args, **kwargs):
         while True:
             try:
-                return self.session.post(*args, **kwargs)
+                return self.scheduler.call(self.session.post, *args, **kwargs)
             except (ConnectionError, Timeout) as error:
                 logger.warning(error)
 

@@ -76,6 +76,9 @@ class API(object):
         while True:
             try:
                 return self.session.post(*args, **kwargs)
+            except VkAPIMethodError as error
+                if error.code != 6:
+                    raise
             except (ConnectionError, Timeout) as error:
                 logger.warning(error)
 

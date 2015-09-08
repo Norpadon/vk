@@ -34,19 +34,24 @@ class API(object):
                  app_ids=None, user_login='', user_password='',
                  default_timeout=10, api_version='5.28'):
 
-        log_args = dict(access_tokens=access_tokens,
-                        scope=scope,
-                        default_timeout=default_timeout,
-                        api_version=api_version,
-                        app_ids=app_ids,
-                        user_login=user_login,
-                        user_password=user_password)
+        log_args = dict(
+            access_tokens=access_tokens,
+            scope=scope,
+            default_timeout=default_timeout,
+            api_version=api_version,
+            app_ids=app_ids,
+            user_login=user_login,
+            user_password=user_password
+        )
 
-        logger.debug('API.__init__(access_token=%(access_token)r, '
-                     'scope=%(scope)r, default_timeout=%(default_timeout)r, '
-                     'api_version=%(api_version)r), app_ids=%(app_ids)r, '
-                     'user_login=%(user_login)r, '
-                     'user_password=%(user_password)r', log_args)
+        logger.debug(
+            'API.__init__(access_token=%(access_token)r, '
+            'scope=%(scope)r, default_timeout=%(default_timeout)r, '
+            'api_version=%(api_version)r), app_ids=%(app_ids)r, '
+            'user_login=%(user_login)r, '
+            'user_password=%(user_password)r',
+            log_args
+        )
 
         self.session = Session()
         self.session.headers['Accept'] = 'application/json'
@@ -67,11 +72,10 @@ class API(object):
         self.schedulers = [Scheduler() for app_id in self.app_ids]
         self.current_scheduler = 0
 
-
     def _post(self,  *args, **kwargs):
         while True:
             try:
-                return self.scheduler.call(self.session.post, *args, **kwargs)
+                return self.session.post(*args, **kwargs)
             except (ConnectionError, Timeout) as error:
                 logger.warning(error)
 

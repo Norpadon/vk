@@ -11,7 +11,7 @@ import vk_async
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 # copy to test_props.py and fill it
-APP_ID = ''  # aka API/Client id
+APP_IDS = []  # aka API/Client id
 
 USER_LOGIN = ''  # user email or phone number
 USER_PASSWORD = ''
@@ -19,7 +19,7 @@ USER_PASSWORD = ''
 from test_props import APP_IDS, USER_LOGIN, USER_PASSWORD
 
 
-class VkTestCase(unittest.TestCase):
+class VkAsyncTestCase(unittest.TestCase):
 
     def setUp(self):
         self.vk_api = vk_async.API(app_ids=APP_IDS,

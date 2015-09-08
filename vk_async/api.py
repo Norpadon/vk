@@ -10,6 +10,7 @@ import warnings
 from functools import partial
 from concurrent.futures import Future
 from requests import Session
+from requests.exceptions import Timeout
 
 from vk_async.scheduler import Scheduler
 from vk_async.logs import LOGGING_CONFIG
@@ -67,11 +68,11 @@ class API(object):
         self.current_scheduler = 0
 
     def _post(self,  *args, **kwargs):
-        """Asynchronously ake HTTP POST query and process result."""
-        scheduler = self.schedulers[self.current_scheduler]
-        self._next_scheduler()
-
-        return scheduler.call(self.session.post, *args, **kwargs)
+        while True:
+            try:
+                return self.scheduler.call(self.session.post, *args, **kwargs)
+            except (ConnectionError, Timeout) as error:
+                logger.warning(error)
 
     def _next_scheduler(self):
         n = len(self.schedulers)
@@ -241,7 +242,11 @@ class API(object):
 
         logger.info('Make request %s, %s', url, params)
 
-        return self._post(url, params, timeout=timeout or self.default_timeout)
+        scheduler = self.schedulers[self.current_scheduler]
+        self._next_scheduler()
+
+        return scheduler.call(self._post, url, params,
+                              timeout=timeout or self.default_timeout)
 
     def captcha_is_needed(self, error_data, method_name, **method_kwargs):
         raise VkAPIMethodError(error_data)

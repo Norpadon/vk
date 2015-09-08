@@ -40,6 +40,15 @@ class VkTestCase(unittest.TestCase):
         friends = self.vk_api.friends.get(user_id=1)
         self.assertEqual(friends.fmap(lambda fs: len(fs) > 0).result(), True)
 
+    def test_error(self):
+        def func():
+            def err(elem):
+                raise Exception(":C")
+
+            return self.vk_api.friends.get(user_id=1).fmap(err).result()
+
+        self.assertRaises(Exception, func)
+
 if __name__ == '__main__':
     unittest.main()
 

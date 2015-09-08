@@ -72,13 +72,10 @@ class API(object):
         self.schedulers = [Scheduler() for app_id in self.app_ids]
         self.current_scheduler = 0
 
-    def _post(self,  *args, **kwargs):
+    def _post(self, *args, **kwargs):
         while True:
             try:
                 return self.session.post(*args, **kwargs)
-            except VkAPIMethodError as error:
-                if error.code != 6:
-                    raise
             except (ConnectionError, Timeout) as error:
                 logger.warning(error)
 
@@ -224,7 +221,9 @@ class API(object):
         if AUTHORIZATION_FAILED in error_codes:  # invalid access token
             logger.info('Authorization failed. Access token will be dropped')
             self.drop_access_token(scheduler)
-            return self(method_name, **method_kwargs)
+            return self(method_name, **method_kwargs).result()
+        elif 6 in error_codes:
+            return self(method_name, **method_kwargs).result()
         else:
             raise VkAPIMethodError(errors[0])
 
@@ -234,7 +233,6 @@ class API(object):
                             method_name, method_kwargs)
 
         return self.method_request(method_name, **method_kwargs).fmap(processor)
-
 
     def method_request(self, method_name, timeout=None, **method_kwargs):
         params = {

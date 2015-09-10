@@ -45,7 +45,7 @@ class API(object):
         )
 
         logger.debug(
-            'API.__init__(access_token=%(access_token)r, '
+            'API.__init__(access_tokens=%(access_tokens)r, '
             'scope=%(scope)r, default_timeout=%(default_timeout)r, '
             'api_version=%(api_version)r), app_ids=%(app_ids)r, '
             'user_login=%(user_login)r, '
@@ -118,7 +118,7 @@ class API(object):
         login_form_action = re.findall(r'<form ?.* action="(.+)"',
                                        login_form_response.text)
         if not login_form_action:
-            raise VkAuthorizationError('vk_async.com changed login flow')
+            raise VkAuthorizationError('vk.com changed login flow')
 
         # Login
         login_form_data = {
@@ -218,11 +218,10 @@ class API(object):
                     warnings.warn(str(error))
                 return data['response']
 
-        if AUTHORIZATION_FAILED in error_codes:  # invalid access token
-            logger.info('Authorization failed. Access token will be dropped')
-            self.drop_access_token(scheduler)
-            return self(method_name, **method_kwargs).result()
-        elif 6 in error_codes:
+        if {AUTHORIZATION_FAILED, TO_MANY_REQUESTS} & set(error_codes):
+            if AUTHORIZATION_FAILED in error_codes:
+                self.drop_access_token(scheduler)
+                logger.info('Authorization failed. Access token will be dropped')
             return self(method_name, **method_kwargs).result()
         else:
             raise VkAPIMethodError(errors[0])

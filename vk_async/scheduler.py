@@ -51,9 +51,9 @@ class FutureFunctor(Future):
         self.executor = executor
         Future.__init__(self)
 
-    def fmap(self, func):
+    def fmap(self, func, timeout=None):
         def callback():
-            return func(self.result())
+            return func(self.result(timeout))
 
         if self.executor:
             result = self.executor.submit(callback)

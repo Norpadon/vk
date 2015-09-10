@@ -77,7 +77,7 @@ class API(object):
             try:
                 return self.session.post(*args, **kwargs)
             except (ConnectionError, Timeout) as error:
-                logger.warning(error)
+                logger.warning(str(error) + ", retrying...")
 
     def _next_scheduler(self):
         n = len(self.schedulers)
@@ -215,7 +215,7 @@ class API(object):
 
             if 'response' in data:
                 for error in errors:
-                    warnings.warn(str(error))
+                    warnings.warn("OOPS: " + str(error))
                 return data['response']
 
         if {AUTHORIZATION_FAILED, TO_MANY_REQUESTS} & set(error_codes):

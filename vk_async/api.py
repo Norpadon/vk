@@ -72,10 +72,21 @@ class API(object):
         self.schedulers = [Scheduler() for app_id in self.app_ids]
         self.current_scheduler = 0
 
-    def _post(self, *args, **kwargs):
+    def _post(self, access_token, method_name, timeout, **method_kwargs):
         while True:
             try:
-                return self.session.post(*args, **kwargs)
+                params = {
+                    'timestamp': int(time.time()),
+                    'access_token': access_token,
+                    'v': self.api_version,
+                }
+
+                method_kwargs = stringify_values(method_kwargs)
+                params.update(method_kwargs)
+                url = 'https://api.vk.com/method/' + method_name
+
+                logger.info('Make request %s, %s', url, params)
+                return self.session.post(url, params, timeout=timeout)
             except (ConnectionError, Timeout) as error:
                 logger.warning(str(error) + ", retrying...")
 
@@ -234,24 +245,17 @@ class API(object):
         return self.method_request(method_name, **method_kwargs).fmap(processor)
 
     def method_request(self, method_name, timeout=None, **method_kwargs):
-        params = {
-            'timestamp': int(time.time()),
-            'v': self.api_version,
-        }
-        if self.access_token:
-            params['access_token'] = self.access_tokens[self.current_scheduler]
-
-        method_kwargs = stringify_values(method_kwargs)
-        params.update(method_kwargs)
-        url = 'https://api.vk.com/method/' + method_name
-
-        logger.info('Make request %s, %s', url, params)
-
         scheduler = self.schedulers[self.current_scheduler]
+        access_token = self.access_tokens[self.current_scheduler]
         self._next_scheduler()
 
-        return scheduler.call(self._post, url, params,
-                              timeout=timeout or self.default_timeout)
+        return scheduler.call(
+            self._post,
+            access_token,
+            method_name,
+            timeout or self.default_timeout,
+            **method_kwargs
+        )
 
     def captcha_is_needed(self, error_data, method_name, **method_kwargs):
         raise VkAPIMethodError(error_data)

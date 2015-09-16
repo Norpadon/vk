@@ -8,8 +8,8 @@ import logging.config
 import warnings
 
 from functools import partial
-from concurrent.futures import Future
 from requests import Session
+from eventlet.timeout import Timeout as EventletTimeout
 from requests.exceptions import Timeout
 
 from vk_async.scheduler import Scheduler
@@ -75,19 +75,20 @@ class API(object):
     def _post(self, access_token, method_name, timeout, **method_kwargs):
         while True:
             try:
-                params = {
-                    'timestamp': int(time.time()),
-                    'access_token': access_token,
-                    'v': self.api_version,
-                }
+                with EventletTimeout(self.default_timeout):
+                    params = {
+                        'timestamp': int(time.time()),
+                        'access_token': access_token,
+                        'v': self.api_version,
+                    }
 
-                method_kwargs = stringify_values(method_kwargs)
-                params.update(method_kwargs)
-                url = 'https://api.vk.com/method/' + method_name
+                    method_kwargs = stringify_values(method_kwargs)
+                    params.update(method_kwargs)
+                    url = 'https://api.vk.com/method/' + method_name
 
-                logger.info('Make request %s, %s', url, params)
-                return self.session.post(url, params, timeout=timeout)
-            except (ConnectionError, Timeout) as error:
+                    logger.info('Make request %s, %s', url, params)
+                    return self.session.post(url, params, timeout=timeout)
+            except (ConnectionError, Timeout, EventletTimeout) as error:
                 logger.warning(str(error) + ", retrying...")
 
     def _next_scheduler(self):

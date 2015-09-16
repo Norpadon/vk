@@ -36,8 +36,9 @@ class Scheduler(object):
 
 class FutureFunctor(Future):
     @staticmethod
-    def wrap(future, executor):
+    def wrap(future, executor, parent=None):
         future.__class__ = FutureFunctor
+        future.parent = parent
         future.executor = executor
         return future
 
@@ -47,17 +48,23 @@ class FutureFunctor(Future):
         result.set_result(value)
         return result
 
-    def __init__(self, executor):
+    def __init__(self, executor, parent=None):
+        self.parent = parent
         self.executor = executor
         Future.__init__(self)
 
-    def fmap(self, func, timeout=None):
+    def result(self, timeout=None):
+        if self.parent:
+            self.parent.result(timeout)
+        return Future.result(self, timeout)
+
+    def fmap(self, func):
         def callback():
-            return func(self.result(timeout))
+            return func(self.result())
 
         if self.executor:
             result = self.executor.submit(callback)
-            return FutureFunctor.wrap(result, self.executor)
+            return FutureFunctor.wrap(result, self.executor, self)
         else:
             return FutureFunctor.lift(callback())
 

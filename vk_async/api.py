@@ -32,7 +32,7 @@ class API(object):
 
     def __init__(self, access_tokens=None, scope='offline',
                  app_ids=None, user_login='', user_password='',
-                 default_timeout=1, api_version='5.28'):
+                 default_timeout=5, api_version='5.28'):
 
         log_args = dict(
             access_tokens=access_tokens,

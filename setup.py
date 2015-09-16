@@ -29,7 +29,7 @@ setup(
     install_requires=[
         'requests',
         'eventlet'
-    ]
+    ],
 
     license='MIT License',
     classifiers=[

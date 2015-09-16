@@ -32,7 +32,7 @@ class API(object):
 
     def __init__(self, access_tokens=None, scope='offline',
                  app_ids=None, user_login='', user_password='',
-                 default_timeout=10, api_version='5.28'):
+                 default_timeout=1, api_version='5.28'):
 
         log_args = dict(
             access_tokens=access_tokens,
@@ -75,7 +75,7 @@ class API(object):
     def _post(self, access_token, method_name, timeout, **method_kwargs):
         while True:
             try:
-                with EventletTimeout(self.default_timeout):
+                with EventletTimeout(timeout):
                     params = {
                         'timestamp': int(time.time()),
                         'access_token': access_token,
@@ -88,7 +88,7 @@ class API(object):
 
                     logger.info('Make request %s, %s', url, params)
                     return self.session.post(url, params, timeout=timeout)
-            except (ConnectionError, Timeout, EventletTimeout) as error:
+            except (Exception, EventletTimeout) as error:
                 logger.warning(str(error) + ", retrying...")
 
     def _next_scheduler(self):

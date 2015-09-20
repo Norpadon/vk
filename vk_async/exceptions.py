@@ -34,3 +34,4 @@ class VkAPIMethodError(VkException):
         if self.redirect_uri:
             error_message += ',\nredirect_uri = "{self.redirect_uri}"'.format(self=self)
         return error_message
+

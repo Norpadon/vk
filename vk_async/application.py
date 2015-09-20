@@ -267,3 +267,4 @@ class APIMethod(object):
     @gen.coroutine
     def __call__(self, **method_kwargs):
         return (yield self._api_session(self._method_name, **method_kwargs))
+

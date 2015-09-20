@@ -65,3 +65,4 @@ def get_form_action(html):
     form_action = re.findall(r'<form(?= ).* action="([^ ]+)"', html)
     if form_action:
         return form_action[0]
+

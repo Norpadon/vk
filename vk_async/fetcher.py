@@ -38,3 +38,4 @@ class Fetcher(object):
 
     def __getattr__(self, method_name):
         return APIMethod(self, method_name)
+

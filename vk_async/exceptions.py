@@ -1,19 +1,24 @@
+# Copyright 2014-2015 Dmitry Voronin <dimka665@gmail.com>. All Rights Reserved.
+
+"""VK API exceptions."""
+
+__author__ = 'Dmitry Voronin (dimka665@gmail.com)'
 
 # API Error Codes
+TO_MANY_REQUESTS = 6
 AUTHORIZATION_FAILED = 5  # Invalid access token
 CAPTCHA_IS_NEEDED = 14
-TO_MANY_REQUESTS = 6
 
 
-class VkError(Exception):
+class VkException(Exception):
     pass
 
 
-class VkAuthorizationError(VkError):
+class VkAuthError(VkException):
     pass
 
 
-class VkAPIMethodError(VkError):
+class VkAPIMethodError(VkException):
     __slots__ = ['error', 'code', 'message', 'request_params', 'redirect_uri']
 
     def __init__(self, error):
@@ -29,4 +34,3 @@ class VkAPIMethodError(VkError):
         if self.redirect_uri:
             error_message += ',\nredirect_uri = "{self.redirect_uri}"'.format(self=self)
         return error_message
-

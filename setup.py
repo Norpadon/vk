@@ -5,19 +5,9 @@ import os
 import re
 from setuptools import setup, find_packages
 
-
-def get_version(file_rel_path):
-    base_dir = os.path.dirname(__file__)
-    file_abs_path = os.path.join(base_dir, file_rel_path)
-    with open(file_abs_path) as file_object:
-        file_content = file_object.read()
-        version = re.findall(r'^VERSION\s*=\s*[\'"](.+)[\'"]', file_content, re.MULTILINE)[0]
-        return version
-
-
 setup(
     name='vk_async',
-    version=get_version('vk_async/api.py'),
+    version='1.0',
 
     author='Artur Chakhvadze',
     author_email='norpadon@yandex.com',
@@ -27,8 +17,7 @@ setup(
 
     packages=find_packages(),
     install_requires=[
-        'requests',
-        'eventlet'
+        'tornado'
     ],
 
     license='MIT License',

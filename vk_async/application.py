@@ -167,7 +167,6 @@ class Application(object):
 
             result = yield self._post(url, params)
             self.last_requests.appendleft(datetime.now())
-            print(id(self), datetime.now())
 
         return result
 

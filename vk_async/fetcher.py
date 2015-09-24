@@ -34,6 +34,7 @@ class Fetcher(object):
     def __call__(self, method_name, **method_kwargs):
         application = self.applications[self.current_application]
         self.current_application += 1
+        self.current_application %= len(self.applications)
         return (yield application(method_name, **method_kwargs))
 
     def __getattr__(self, method_name):

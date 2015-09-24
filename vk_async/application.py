@@ -8,9 +8,10 @@ __author__ = 'Artur Chakhvadze (norpadon@yandex.ru)'
 
 import time
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timedelta
 from tornado import gen
 from tornado.ioloop import IOLoop
+from tornado.locks import Lock
 from tornado.httputil import HTTPHeaders
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 
@@ -63,6 +64,7 @@ class Application(object):
         self.default_timeout = default_timeout
 
         self.client_session = Session(AsyncHTTPClient)
+        self.queue_lock = Lock()
 
         IOLoop.current().run_sync(self.get_access_token)
 
@@ -147,23 +149,27 @@ class Application(object):
             **method_args: arguments to VK API method.
         """
         # Wait if too many requests were made.
-        first_request = self.last_requests.pop()
-        now = datetime.now()
-        delay = max(0, 1 - (now - first_request).total_seconds())
-        yield gen.sleep(delay)
-        self.last_requests.appendleft(now)
+        with (yield self.queue_lock.acquire()):
+            first_request = self.last_requests.pop()
+            now = datetime.now()
+            delay = max(0, 1.1 - (now - first_request).total_seconds())
+            yield gen.sleep(delay)
 
-        params = {
-            'timestamp': int(time.time()),
-            'access_token': self.access_token,
-            'v': self.api_version,
-        }
+            params = {
+                'timestamp': int(time.time()),
+                'access_token': self.access_token,
+                'v': self.api_version,
+            }
 
-        method_kwargs = stringify_values(method_kwargs)
-        params.update(method_kwargs)
-        url = self.API_URL + method_name
+            method_kwargs = stringify_values(method_kwargs)
+            params.update(method_kwargs)
+            url = self.API_URL + method_name
 
-        return (yield self._post(url, params))
+            result = yield self._post(url, params)
+            self.last_requests.appendleft(datetime.now())
+            print(id(self), datetime.now())
+
+        return result
 
     @gen.coroutine
     def get_access_token(self):

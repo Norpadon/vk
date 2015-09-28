@@ -138,6 +138,10 @@ class Application(object):
 
                 return data['response']
 
+        # Handle "Too many requests" error.
+        if TO_MANY_REQUESTS in error_codes:
+            return self(method_name, **method_kwargs)
+
         raise VkAPIMethodError(errors[0])
 
     @gen.coroutine

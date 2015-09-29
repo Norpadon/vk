@@ -140,7 +140,7 @@ class Application(object):
 
         # Handle "Too many requests" error.
         if TO_MANY_REQUESTS in error_codes:
-            return self(method_name, **method_kwargs)
+            return (yield self(method_name, **method_kwargs))
 
         raise VkAPIMethodError(errors[0])
 

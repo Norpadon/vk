@@ -1,4 +1,4 @@
-# Copyright 2015 Artur Chakhvadze <nopadon@yandex.ru>
+# Copyright 2015 Artur Chakhvadze <nopadon@yandex.ru>.
 # Copyright 2014-2015 Dmitry Voronin <dimka665@gmail.com>.
 # All Rights Reserved.
 

@@ -1,4 +1,4 @@
-# Copyright 2015 Artur Chakhvadze <nopadon@yandex.ru>
+# Copyright 2015 Artur Chakhvadze <nopadon@yandex.ru>.
 # All Rights Reserved.
 
 """Classes for making extensive parallel requests from set of applications."""

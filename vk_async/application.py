@@ -9,6 +9,7 @@ __author__ = 'Artur Chakhvadze (norpadon@yandex.ru)'
 import time
 from collections import deque
 from datetime import datetime, timedelta
+
 from tornado import gen
 from tornado.ioloop import IOLoop
 from tornado.locks import Lock
@@ -196,7 +197,13 @@ class Application(object):
                 Default is retrieved from m.vk.api/login.
         """
         if login_form_action is None:
-            response = yield self.client_session.fetch(self.LOGIN_URL)
+            while True:
+                try:
+                    response = yield self.client_session.fetch(self.LOGIN_URL)
+                    break
+                except HTTPError:
+                    pass
+
             login_form_action = get_form_action(response.body.decode('utf-8'))
             if not login_form_action:
                 raise VkAuthError('VK changed login flow')
